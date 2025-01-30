@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AstroTorpe</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Orbitron', sans-serif;
+            background-color: #060b20;
+            color: white;
+            text-align: center;
+        }
+        .start-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0f38, #1a237e);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 50px rgba(255, 255, 255, 0.2);
+        }
+        .start-screen h1 {
+            font-size: 50px;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+            animation: glow 1.5s infinite alternate;
+        }
+        @keyframes glow {
+            0% { text-shadow: 0 0 15px rgba(0, 255, 255, 0.8); }
+            100% { text-shadow: 0 0 30px rgba(0, 255, 255, 1); }
+        }
+        .start-screen button {
+            background: transparent;
+            border: 3px solid cyan;
+            color: cyan;
+            padding: 15px 40px;
+            font-size: 24px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: 0.3s ease-in-out;
+            text-transform: uppercase;
+            font-weight: bold;
+            box-shadow: 0 0 10px cyan, 0 0 40px rgba(0, 255, 255, 0.3);
+        }
+        .start-screen button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px cyan, 0 0 60px rgba(0, 255, 255, 0.6);
+            background: rgba(0, 255, 255, 0.2);
+        }
+        canvas {
+            display: none;
+            background-color: rgba(9, 9, 26, 0.938);
+        }
+    </style>
+</head> 
+<body>
+    <div class="start-screen" id="startScreen">
+        <h1>🚀 AstroTorpe 🚀</h1>
+        <button id="start-button">Jugar</button>
+        <p>Power By Amauri</p>
+    </div>
+
+
+    <canvas id="canvas" width="2000" height="1000"></canvas>
+    
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const startScreen = document.getElementById("startScreen");
+        const backgroundMusic = new Audio("music/Noche.mp3");
+        backgroundMusic.loop = true;
+        backgroundMusic.volume = 0.5;
+        backgroundMusic.play();
+
+        document.getElementById("start-button").addEventListener("click", function() {
+            backgroundMusic.pause(); // Pausa la música antes de cambiar de página
+            window.location.href = "game.html";
+        });
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "white";
+            ctx.font = "30px Arial";
+            ctx.fillText("¡Juego en progreso!", canvas.width / 2 - 100, canvas.height / 2);
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>
