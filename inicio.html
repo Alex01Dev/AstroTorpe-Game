@@ -43,6 +43,7 @@
             border-radius: 10px;
             transition: 0.3s ease-in-out;
             text-transform: uppercase;
+            margin-top: 15px;
             font-weight: bold;
             box-shadow: 0 0 10px cyan, 0 0 40px rgba(0, 255, 255, 0.3);
         }
@@ -60,7 +61,8 @@
 <body>
     <div class="start-screen" id="startScreen">
         <h1>🚀 AstroTorpe 🚀</h1>
-        <button id="start-button">Jugar</button>
+        <button id="start-button">Nivel 1</button>
+        <button id="button-level2">Nivel 2</button>
         <p>Power By Amauri</p>
     </div>
 
@@ -79,6 +81,11 @@
         document.getElementById("start-button").addEventListener("click", function() {
             backgroundMusic.pause(); // Pausa la música antes de cambiar de página
             window.location.href = "game.html";
+        });
+
+        document.getElementById("button-level2").addEventListener("click", function() {
+            backgroundMusic.pause(); // Pausa la música antes de cambiar de página
+            window.location.href = "level2.html";
         });
 
         function gameLoop() {

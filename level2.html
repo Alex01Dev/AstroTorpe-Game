@@ -1,150 +1,346 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nivel 2 - AstroTorpe</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: black;
-        }
-        canvas {
-            display: block;
-            background-color: rgba(9, 9, 26, 0.938);
-        }
-        #killCount {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: lime;
-            font-size: 24px;
-            font-family: Arial, sans-serif;
-            text-shadow: 0 0 8px lime;
-            padding: 10px;
-            border: 2px solid lime;
-            border-radius: 10px;
-            background: rgba(0, 0, 0, 0.5);
-        }
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: rgb(88, 19, 19);
+      }
+      canvas {
+        display: block;
+        background-color: rgba(9, 9, 26, 0.938);
+      }
+      #killCount {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: lime;
+        font-size: 24px;
+        font-family: Arial, sans-serif;
+        text-shadow: 0 0 8px lime;
+        padding: 10px;
+        border: 2px solid lime;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.5);
+      }
+      #highScore2 {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        color: rgb(43, 255, 0);
+        font-size: 24px;
+        font-family: Arial, sans-serif;
+        text-shadow: 0 0 8px rgb(0, 255, 21);
+        padding: 10px;
+        border: 2px solid rgb(0, 255, 85);
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.5);
+      }
+      /* Estilos para la modal */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(10, 10, 30, 0.95);
+        padding: 20px;
+        text-align: center;
+        border: 2px solid rgb(0, 255, 34);
+        box-shadow: 0 0 20px rgb(43, 221, 111);
+        border-radius: 15px;
+        color: white;
+        font-family: Arial, sans-serif;
+      }
+      .modal button {
+        margin: 10px;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+        color: white;
+        background: rgb(238, 255, 0);
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgb(0, 255, 128);
+      }
+      #controls {
+        position: fixed;
+        top: 80px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        color: lime;
+        padding: 15px;
+        font-family: Arial, sans-serif;
+        font-size: 18px;
+        border: 2px solid lime;
+        border-radius: 10px;
+        z-index: 10;
+        box-shadow: 0 0 10px lime;
+      }
+
+      #controls h2 {
+        margin: 0;
+        font-size: 24px;
+        text-shadow: 0 0 8px lime;
+      }
+
+      #controls ul {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0;
+      }
+
+      #controls ul li {
+        margin-bottom: 8px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div id="killCount">Bajas: 0</div>
+    <div id="controls">
+      <h2>Controles del Juego</h2>
+      <p><strong>Movimiento:</strong></p>
+      <ul>
+        <li><strong>W</strong> - Mover arriba</li>
+        <li><strong>S</strong> - Mover abajo</li>
+        <li><strong>A</strong> - Mover izquierda</li>
+        <li><strong>D</strong> - Mover derecha</li>
+      </ul>
+      <p><strong>Disparar:</strong></p>
+      <ul>
+        <li><strong>Espacio</strong> - Disparar</li>
+        <li><strong>M</strong> - Disparo triple</li>
+      </ul>
+    </div>
+    <div id="highScore2">Máximo: 0</div>
     <canvas id="canvas" width="2000" height="1000"></canvas>
+    <div id="gameOverModal" class="modal">
+      <h2>¡Perdiste!</h2>
+      <p id="finalScore"></p>
+      <button id="restart-btn">Volver a jugar</button>
+      <button id="back-home">Regresar al inicio</button>
+    </div>
     <script>
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const restartBtn = document.getElementById("restart-btn");
+      const backHomeBtn = document.getElementById("back-home");
 
-        const player = new Image();
-        player.src = "img/astronauta.png";
-        let x = 500, y = 500;
-        const playerWidth = 80, playerHeight = 90;
-        let keyState = {};
-        let bullets = [];
-        let aliens = [];
-        let killCount = 0;
+      const player = new Image();
+      player.src = "img/astronauta.png";
+      let x = 500,
+        y = 500;
+      const playerWidth = 80,
+        playerHeight = 90;
+      let keyState = {};
+      let bullets = [];
+      let aliens = [];
+      let killCount = 0;
+      let spawnInterval = 2000; // Intervalo inicial para la aparición de enemigos
+      let highScore2 = localStorage.getItem("highScore2") || 0; // Cargar el puntaje más alto desde el localStorage
+      document.getElementById(
+        "highScore2"
+      ).textContent = `Máximo: ${highScore2}`;
 
-        document.addEventListener("keydown", (e) => keyState[e.key] = true);
-        document.addEventListener("keyup", (e) => keyState[e.key] = false);
+      document.addEventListener("keydown", (e) => (keyState[e.key] = true));
+      document.addEventListener("keyup", (e) => (keyState[e.key] = false));
 
-        function spawnAlien() {
-            let alien = {
-                x: Math.random() * (canvas.width - 100),
-                y: Math.random() * 200,
-                width: 80,
-                height: 80,
-                img: new Image(),
-                alpha: 0, 
-                fadingIn: true
-            };
-            alien.img.src = killCount >= 20 ? "img/alien2.png" : "img/alien.png";
-            aliens.push(alien);
-        }
+      function spawnAlien() {
+        let alien = {
+          x: Math.random() * (canvas.width - 100),
+          y: Math.random() * 200,
+          width: 80,
+          height: 80,
+          img: new Image(),
+          alpha: 0,
+          fadingIn: true,
+          speed: 1 + (killCount / 10), // Velocidad inicial del alien
+        };
+        alien.img.src = killCount >= 20 ? "img/alien2.png" : "img/alien.png";
+        aliens.push(alien);
+      }
 
-        function drawPlayer() {
-            ctx.drawImage(player, x, y, playerWidth, playerHeight);
-        }
+      function moveAliens() {
+        aliens.forEach((alien) => {
+          // Acercando el alien hacia el jugador
+          let dx = x - alien.x;
+          let dy = y - alien.y;
+          let distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance > 10) {
+            alien.x += (alien.speed * dx) / distance;
+            alien.y += (alien.speed * dy) / distance;
+          }
+        });
+      }
 
-        function drawAliens() {
-            aliens.forEach(alien => {
-                if (alien.fadingIn) {
-                    alien.alpha += 0.02;
-                    if (alien.alpha >= 1) alien.fadingIn = false;
-                }
-                ctx.globalAlpha = alien.alpha;
-                ctx.drawImage(alien.img, alien.x, alien.y, alien.width, alien.height);
-                ctx.globalAlpha = 1;
-            });
-        }
+      const backgroundMusic = new Audio("music/Noche.mp3");
 
-        function shoot() {
-            bullets.push({ x: x + playerWidth / 2, y: y, width: 10, height: 20 });
+      // Configurar la música para que se repita automáticamente
+      backgroundMusic.loop = true;
 
-            
-            let shootSound = new Audio("music/Disparo.mp3");
-            shootSound.volume = 0.5;
-            shootSound.play();
-        }
+      // Función para comenzar la música desde un punto específico
+      function startMusicFromPoint(timeInSeconds) {
+        backgroundMusic.currentTime = timeInSeconds; // Adelantar la música al segundo deseado
+        backgroundMusic.play(); // Reproducir la música
+      }
 
-        function drawBullets() {
-            ctx.fillStyle = "red";
-            bullets.forEach(bullet => {
-                bullet.y -= 10;
-                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-            });
-        }
+      // Llamar a la función para comenzar la música desde el segundo 30
+      startMusicFromPoint(90);
 
-        function checkCollisions() {
-            bullets.forEach((bullet, bIndex) => {
-                aliens.forEach((alien, aIndex) => {
-                    if (
-                        bullet.x < alien.x + alien.width &&
-                        bullet.x + bullet.width > alien.x &&
-                        bullet.y < alien.y + alien.height &&
-                        bullet.y + bullet.height > alien.y
-                    ) {
-                        aliens[aIndex].fadingOut = true;
-                        bullets.splice(bIndex, 1);
-                        killCount++;
-                        document.getElementById("killCount").textContent = `Bajas: ${killCount}`;
-                    }
-                });
-            });
+      function drawPlayer() {
+        ctx.drawImage(player, x, y, playerWidth, playerHeight);
+      }
 
-            aliens = aliens.filter(alien => {
-                if (alien.fadingOut) {
-                    alien.alpha -= 0.05;
-                    return alien.alpha > 0;
-                }
-                return true;
-            });
-        }
+      function drawAliens() {
+        aliens.forEach((alien) => {
+          if (alien.fadingIn) {
+            alien.alpha += 0.02;
+            if (alien.alpha >= 1) alien.fadingIn = false;
+          }
+          ctx.globalAlpha = alien.alpha;
+          ctx.drawImage(alien.img, alien.x, alien.y, alien.width, alien.height);
+          ctx.globalAlpha = 1;
+        });
+      }
 
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+      function shoot() {
+        bullets.push({ x: x + playerWidth / 2, y: y, width: 10, height: 20 });
 
-            let speed = 7; // Aumento de velocidad del astronauta
+        let shootSound = new Audio("music/Disparo.mp3");
+        shootSound.volume = 0.5;
+        shootSound.play();
+      }
 
-            if (keyState["w"] && y > 0) y -= speed;
-            if (keyState["s"] && y < canvas.height - playerHeight) y += speed;
-            if (keyState["a"] && x > 0) x -= speed;
-            if (keyState["d"] && x < canvas.width - playerWidth) x += speed;
-
-            drawPlayer();
-            drawAliens();
-            drawBullets();
-            checkCollisions();
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        document.addEventListener("keydown", (e) => {
-            if (e.key === " ") shoot();
+      // Disparo triple con arco
+      function shootTriple() {
+        bullets.push({
+          x: x + playerWidth / 2 - 20,
+          y: y,
+          width: 10,
+          height: 20,
+        });
+        bullets.push({ x: x + playerWidth / 2, y: y, width: 10, height: 20 });
+        bullets.push({
+          x: x + playerWidth / 2 + 20,
+          y: y,
+          width: 10,
+          height: 20,
         });
 
-        setInterval(spawnAlien, 2000);
-        gameLoop();
+        let shootSound = new Audio("music/Disparo.mp3");
+        shootSound.volume = 0.5;
+        shootSound.play();
+      }
+
+      function drawBullets() {
+        ctx.fillStyle = "red";
+        bullets.forEach((bullet) => {
+          bullet.y -= 10;
+          ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+        });
+      }
+
+      function checkCollisions() {
+        bullets.forEach((bullet, bIndex) => {
+          aliens.forEach((alien, aIndex) => {
+            if (
+              bullet.x < alien.x + alien.width &&
+              bullet.x + bullet.width > alien.x &&
+              bullet.y < alien.y + alien.height &&
+              bullet.y + bullet.height > alien.y
+            ) {
+              aliens[aIndex].fadingOut = true;
+              bullets.splice(bIndex, 1);
+              killCount++;
+              document.getElementById(
+                "killCount"
+              ).textContent = `Bajas: ${killCount}`;
+            }
+          });
+        });
+
+        // Verificar colisión con el jugador
+        aliens.forEach((alien) => {
+          if (
+            alien.x < x + playerWidth &&
+            alien.x + alien.width > x &&
+            alien.y < y + playerHeight &&
+            alien.y + alien.height > y
+          ) {
+            gameOver();
+          }
+        });
+
+        aliens = aliens.filter((alien) => {
+          if (alien.fadingOut) {
+            alien.alpha -= 0.05;
+            return alien.alpha > 0;
+          }
+          return true;
+        });
+      }
+
+      function gameOver() {
+        // Guardar el puntaje más alto
+        if (killCount > highScore2) {
+          highScore2 = killCount;
+          localStorage.setItem("highScore2", highScore2);
+          document.getElementById(
+            "highScore2"
+          ).textContent = `Máximo: ${highScore2}`;
+        }
+
+        // Mostrar la modal
+        document.getElementById("gameOverModal").style.display = "block";
+        // Detener el juego
+        cancelAnimationFrame(gameLoop);
+      }
+
+      function restartGame() {
+        // Reiniciar el juego
+        location.reload();
+      }
+
+      function gameLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        let speed = 7; // Aumento de velocidad del astronauta
+
+        if (keyState["w"] && y > 0) y -= speed;
+        if (keyState["s"] && y < canvas.height - playerHeight) y += speed;
+        if (keyState["a"] && x > 0) x -= speed;
+        if (keyState["d"] && x < canvas.width - playerWidth) x += speed;
+
+        moveAliens(); // Mover los aliens hacia el jugador
+        drawPlayer();
+        drawAliens();
+        drawBullets();
+        checkCollisions();
+
+        // Aumento de la frecuencia de aparición de enemigos según las bajas
+        if (killCount >= 10) spawnInterval = 1500; // Se reduce el intervalo
+        if (killCount >= 30) spawnInterval = 1000; // Se reduce aún más el intervalo
+
+        requestAnimationFrame(gameLoop);
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === " ") shoot();
+        if (e.key === "m") shootTriple();
+      });
+
+      backHomeBtn.addEventListener("click", function () {
+        // backgroundMusic.pause();
+        window.location.href = "inicio.html";
+      });
+
+      restartBtn.addEventListener("click", restartGame);
+      setInterval(spawnAlien, spawnInterval);
+      gameLoop();
     </script>
-</body>
+  </body>
 </html>
