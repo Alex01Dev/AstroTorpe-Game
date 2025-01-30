@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nivel 2 - AstroTorpe</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+        }
+        canvas {
+            display: block;
+            background-color: rgba(9, 9, 26, 0.938);
+        }
+        #killCount {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: lime;
+            font-size: 24px;
+            font-family: Arial, sans-serif;
+            text-shadow: 0 0 8px lime;
+            padding: 10px;
+            border: 2px solid lime;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="killCount">Bajas: 0</div>
+    <canvas id="canvas" width="2000" height="1000"></canvas>
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        const player = new Image();
+        player.src = "img/astronauta.png";
+        let x = 500, y = 500;
+        const playerWidth = 80, playerHeight = 90;
+        let keyState = {};
+        let bullets = [];
+        let aliens = [];
+        let killCount = 0;
+
+        document.addEventListener("keydown", (e) => keyState[e.key] = true);
+        document.addEventListener("keyup", (e) => keyState[e.key] = false);
+
+        function spawnAlien() {
+            let alien = {
+                x: Math.random() * (canvas.width - 100),
+                y: Math.random() * 200,
+                width: 80,
+                height: 80,
+                img: new Image(),
+                alpha: 0, 
+                fadingIn: true
+            };
+            alien.img.src = killCount >= 20 ? "img/alien2.png" : "img/alien.png";
+            aliens.push(alien);
+        }
+
+        function drawPlayer() {
+            ctx.drawImage(player, x, y, playerWidth, playerHeight);
+        }
+
+        function drawAliens() {
+            aliens.forEach(alien => {
+                if (alien.fadingIn) {
+                    alien.alpha += 0.02;
+                    if (alien.alpha >= 1) alien.fadingIn = false;
+                }
+                ctx.globalAlpha = alien.alpha;
+                ctx.drawImage(alien.img, alien.x, alien.y, alien.width, alien.height);
+                ctx.globalAlpha = 1;
+            });
+        }
+
+        function shoot() {
+            bullets.push({ x: x + playerWidth / 2, y: y, width: 10, height: 20 });
+
+            
+            let shootSound = new Audio("music/Disparo.mp3");
+            shootSound.volume = 0.5;
+            shootSound.play();
+        }
+
+        function drawBullets() {
+            ctx.fillStyle = "red";
+            bullets.forEach(bullet => {
+                bullet.y -= 10;
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+            });
+        }
+
+        function checkCollisions() {
+            bullets.forEach((bullet, bIndex) => {
+                aliens.forEach((alien, aIndex) => {
+                    if (
+                        bullet.x < alien.x + alien.width &&
+                        bullet.x + bullet.width > alien.x &&
+                        bullet.y < alien.y + alien.height &&
+                        bullet.y + bullet.height > alien.y
+                    ) {
+                        aliens[aIndex].fadingOut = true;
+                        bullets.splice(bIndex, 1);
+                        killCount++;
+                        document.getElementById("killCount").textContent = `Bajas: ${killCount}`;
+                    }
+                });
+            });
+
+            aliens = aliens.filter(alien => {
+                if (alien.fadingOut) {
+                    alien.alpha -= 0.05;
+                    return alien.alpha > 0;
+                }
+                return true;
+            });
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let speed = 7; // Aumento de velocidad del astronauta
+
+            if (keyState["w"] && y > 0) y -= speed;
+            if (keyState["s"] && y < canvas.height - playerHeight) y += speed;
+            if (keyState["a"] && x > 0) x -= speed;
+            if (keyState["d"] && x < canvas.width - playerWidth) x += speed;
+
+            drawPlayer();
+            drawAliens();
+            drawBullets();
+            checkCollisions();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === " ") shoot();
+        });
+
+        setInterval(spawnAlien, 2000);
+        gameLoop();
+    </script>
+</body>
+</html>
